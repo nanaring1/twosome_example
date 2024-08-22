@@ -1,63 +1,86 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:twosome_example/models/coffee.dart';
-import 'package:twosome_example/screens/menu/menu_detail_screen.dart';
 
-class CoffeeMenuScreen extends StatelessWidget {
-  const CoffeeMenuScreen({
-    super.key,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      children: List.generate(
-        // coffees 길이만큼 리스트를 만듭니다.
-        coffees.length,
-            (index) => Container(
-          height: 150.0,
-          // 리스트뷰의 아이템 클릭 시
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        MenuDetailScreen(item: coffees[index]),
-                  ));
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                // 위젯을 수평 방향으로 배치합니다.
-                children: [
-                  // 메뉴 이미지
-                  Image.asset("${coffees[index].imageUrl}"),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      mainAxisAlignment:
-                      MainAxisAlignment.center, // 수직 방향으로 중앙 정렬
-                      crossAxisAlignment:
-                      CrossAxisAlignment.start, // 가로 방향으로 왼쪽 맞춤 정렬
-                      children: [
-                        // 메뉴명
-                        Text(
-                          "${coffees[index].title}",
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        // 금액
-                        Text(
-                          "${coffees[index].price}원",
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+const String SERVERIP = "http://a9b8c7d6e5f4g3h2i1j0klmnopqrst.ap-northeast-2.elasticbeanstalk.com/cafe/menu"; // 서버 주소 입력
+
+TextEditingController searchTextEditController = TextEditingController();
+
+Future<dynamic> _getSearchData() async {
+  Dio dio = Dio();
+
+  try {
+    // API 요청
+    Response res = await dio.get(
+      SERVERIP ,
+      queryParameters: {
+        'search_text': searchTextEditController.text, // 검색어 전달
+      },
     );
+    print(res);
+    return res.data; // 서버로부터 받은 데이터 반환
+  } on DioError catch (e) {
+    print("API 요청 중 오류 발생: ${e.response?.statusCode} - ${e.message}");
+    return null; // 오류 발생 시 null 반환
   }
 }
+
+
+class Coffee {
+  final String id;
+  final String title;
+  final String price;
+  final String imageUrl;
+  final String imageUrl2;
+
+
+  Coffee({
+    required this.id,
+    required this.title,
+    required this.price,
+    required this.imageUrl,
+    required this.imageUrl2,
+  });
+}
+
+
+List<Coffee> parseCoffees(List<dynamic> data) {
+  _getSearchData();
+  return data.map((item) => Coffee(
+    id: item['id'],
+    title: item['title'],
+    price: item['price'],
+    imageUrl: item['imageUrl'],
+    imageUrl2: item['imageUrl2'],
+  )).toList();
+}
+
+List<Coffee> coffees = [
+  Coffee(
+    id: "01",
+    title: "(1호점)신촌커피",
+    price: "6100",
+    imageUrl: "assets/images/coffee01.jpg",
+    imageUrl2: "assets/images/coffee01_ice.jpg",
+  ),
+  Coffee(
+    id: "02",
+    title: "아메리카노",
+    price: "4500",
+    imageUrl: "assets/images/coffee02.jpg",
+    imageUrl2: "assets/images/coffee02_ice.png",
+  ),
+  Coffee(
+    id: "03",
+    title: "카페라떼",
+    price: "5000",
+    imageUrl: "assets/images/coffee03.jpg",
+    imageUrl2: "assets/images/coffee03_ice.png",
+  ),
+  Coffee(
+    id: "04",
+    title: "바닐라카페라떼",
+    price: "5500",
+    imageUrl: "assets/images/coffee04.png",
+    imageUrl2: "assets/images/coffee04_ice.png",
+  ),
+];
